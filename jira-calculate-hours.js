@@ -16,14 +16,37 @@ jQuery(document).ready(function() {
     // Monitor .navigator-content for changes.
     // When #issuetable is rewritten, recalculate estimates footer.
     var oldTable = jQuery("#issuetable").get(0);
+    var oldWorkLog = jQuery("#issue_actions_container .issue-data-block").get(0);
     jQuery(".navigator-content").bind('DOMSubtreeModified', function(e) {
         var newTable = jQuery("#issuetable").get(0);
         if (newTable !== oldTable) {
             oldTable = newTable;
             addEstimatesFooter();
         }
+
+        var newWorkLog = jQuery("#issue_actions_container .issue-data-block").get(0);
+        if (newWorkLog !== oldWorkLog) {
+            oldWorkLog = newWorkLog;
+            console.log("Add worklog");
+            addWorkDoneSummary();
+        }
     });
 });
+
+function addWorkDoneSummary() {
+    var workDone = {};
+    jQuery("#issue_actions_container .issue-data-block").each((i, container) => {
+        var author = $(container).find(".user-avatar").text().trim();
+        var duration = parseToMinutes($(container).find(".worklog-duration").text().trim());
+        if (author && duration) {
+            workDone[author] = (workDone[author] || 0) + duration;
+        }
+    });
+
+    Object.keys(workDone).forEach(author => {
+        $("#issue_actions_container").append(`<p>${author}: ${formatEstimate(workDone[author])}</p>`);
+    });
+}
 
 function addEstimatesFooter() {
     // Clone last row and clean it from content
